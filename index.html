@@ -316,6 +316,29 @@
   .modal-btn{width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font)}
   .modal-btn:hover{background:var(--red-dark)}
   .modal-skip{display:block;text-align:center;font-size:12px;color:var(--txt3);margin-top:10px;cursor:pointer;text-decoration:underline}
+
+  .mdt-btn{padding:7px 14px;background:var(--red);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;font-family:var(--font);letter-spacing:0.5px;transition:background .15s;white-space:nowrap}
+  .mdt-btn:hover{background:var(--red-dark)}
+  .burger-btn{background:none;border:none;cursor:pointer;padding:8px;display:flex;flex-direction:column;gap:5px;flex-shrink:0}
+  .burger-btn span{display:block;width:22px;height:2px;background:#fff;border-radius:2px;transition:all .25s}
+  .burger-btn.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+  .burger-btn.open span:nth-child(2){opacity:0}
+  .burger-btn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+  .burger-menu{display:none;flex-direction:column;background:var(--navy2);border-top:1px solid rgba(255,255,255,0.08);padding:8px 0}
+  .burger-menu.open{display:flex}
+  .burger-item{background:none;border:none;padding:13px 1.5rem;font-size:14px;color:rgba(255,255,255,0.8);cursor:pointer;text-align:left;font-family:var(--font);transition:background .1s,color .1s;display:block;width:100%}
+  .burger-item:hover{background:rgba(255,255,255,0.07);color:#fff}
+  @media(min-width:900px){
+    .burger-btn{display:none}
+    .burger-menu{display:none!important}
+    .nav-tabs{display:flex!important}
+    .mdt-btn{display:inline-flex}
+  }
+  @media(max-width:899px){
+    #nav-tabs-desktop{display:none!important}
+  }
+  [data-theme="dark"] .burger-menu{background:#0f172a}
+  [data-theme="dark"] .mdt-btn{background:var(--red)}
 </style>
 </head>
 <body>
@@ -345,7 +368,7 @@
         <div class="nav-brand-sub">FlashFA — Serveur officiel</div>
       </div>
     </a>
-    <div class="nav-tabs">
+    <div class="nav-tabs" id="nav-tabs-desktop">
       <button class="nav-tab active" onclick="go('accueil',this)">Accueil</button>
       <button class="nav-tab" onclick="go('protocoles',this)">Protocoles</button>
       <button class="nav-tab" onclick="go('blessures',this)">Blessures &amp; ATA</button>
@@ -356,6 +379,24 @@
       <button class="nav-tab" onclick="go('pharma',this)">Pharmacologie</button>
       <button class="nav-tab" onclick="go('rapports',this)">Rédaction IA</button>
     </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0">
+      <a href="https://mdt.flashfa.fr/" target="_blank" class="mdt-btn">MDT</a>
+      <button class="burger-btn" onclick="toggleBurger()" id="burger-btn" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+  <div class="burger-menu" id="burger-menu">
+    <button class="burger-item" onclick="go('accueil',null);closeBurger()">🏠 Accueil</button>
+    <button class="burger-item" onclick="go('protocoles',null);closeBurger()">🚑 Protocoles</button>
+    <button class="burger-item" onclick="go('blessures',null);closeBurger()">🩹 Blessures &amp; ATA</button>
+    <button class="burger-item" onclick="go('chirurgie',null);closeBurger()">🏥 Chirurgie &amp; Bloc</button>
+    <button class="burger-item" onclick="go('radio',null);closeBurger()">📻 Codes radio</button>
+    <button class="burger-item" onclick="go('vehicules',null);closeBurger()">🚗 Véhicules</button>
+    <button class="burger-item" onclick="go('grades',null);closeBurger()">⭐ Grades &amp; Dispatch</button>
+    <button class="burger-item" onclick="go('pharma',null);closeBurger()">💊 Pharmacologie</button>
+    <button class="burger-item" onclick="go('rapports',null);closeBurger()">📝 Rédaction IA</button>
+    <a href="https://mdt.flashfa.fr/" target="_blank" class="burger-item" style="text-decoration:none;color:inherit">🖥️ Accéder au MDT</a>
   </div>
 </nav>
 
@@ -1350,6 +1391,17 @@ function copyOutput() {
   });
 }
 
+
+function toggleBurger() {
+  var menu = document.getElementById('burger-menu');
+  var btn = document.getElementById('burger-btn');
+  menu.classList.toggle('open');
+  btn.classList.toggle('open');
+}
+function closeBurger() {
+  document.getElementById('burger-menu').classList.remove('open');
+  document.getElementById('burger-btn').classList.remove('open');
+}
 function toggleDark() {
   var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   document.documentElement.setAttribute('data-theme', isDark ? '' : 'dark');
