@@ -838,11 +838,19 @@
   <div class="page-sub">Assistant IA — Génère ton rapport SAMC officiel en quelques secondes — Code 3 &amp; Code 6</div>
 
   <div class="card" style="margin-bottom:10px;border-left:4px solid var(--green)">
-    <div style="display:flex;align-items:center;gap:8px;">
-      <div style="width:10px;height:10px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0"></div>
-      <div style="font-size:13px;font-weight:700;color:var(--green-dark)">IA SAMC opérationnelle — Gemini 1.5 Flash</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0"></div>
+        <div style="font-size:13px;font-weight:700;color:var(--green-dark)">IA SAMC opérationnelle</div>
+      </div>
+      <select id="f-model" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--txt);font-family:var(--font)">
+        <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+        <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
+        <option value="gemini-1.5-flash-001">Gemini 1.5 Flash</option>
+        <option value="gemini-1.0-pro">Gemini 1.0 Pro</option>
+      </select>
     </div>
-    <div style="font-size:12px;color:var(--txt3);margin-top:4px">Prête à générer tes rapports. Remplis le formulaire et clique sur Générer.</div>
+    <div style="font-size:12px;color:var(--txt3);margin-top:4px">Remplis le formulaire et clique sur Générer. Si un modèle échoue, le site essaie automatiquement les suivants.</div>
   </div>
 
   <div class="card" style="margin-bottom:1rem">
@@ -1116,7 +1124,7 @@ ATA prescrit : ${ata}`;
 
   var apiKey = 'AIzaSyBDjUnxttjaFd6JPuOzRz9Se0IxWHqLs1A';
 
-  var selectedModel = 'gemini-1.5-flash';
+  var selectedModel = document.getElementById('f-model') ? document.getElementById('f-model').value : 'gemini-2.0-flash';
   var geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/' + selectedModel + ':generateContent?key=' + apiKey;
   var geminiPayload = JSON.stringify({
     system_instruction: { parts: [{ text: systemPrompt }] },
@@ -1125,15 +1133,18 @@ ATA prescrit : ${ata}`;
   });
 
   var ok = false;
-  var maxRetries = 3;
+  var modelsToTry = ['gemini-2.0-flash'];
+  modelsToTry = modelsToTry.filter(function(v,i,a){ return a.indexOf(v)===i; });
 
-  for (var attempt = 1; attempt <= maxRetries && !ok; attempt++) {
-    if (attempt > 1) {
-      out.textContent = 'Serveur surchargé — nouvelle tentative ' + attempt + '/' + maxRetries + '…';
-      await new Promise(function(r){ setTimeout(r, 3000 * attempt); });
+  for (var mi = 0; mi < modelsToTry.length && !ok; mi++) {
+    var tryModel = modelsToTry[mi];
+    var tryUrl = 'https://generativelanguage.googleapis.com/v1beta/models/' + tryModel + ':generateContent?key=' + apiKey;
+    if (mi > 0) {
+      out.textContent = 'Modele indisponible, essai avec ' + tryModel + '...';
+      await new Promise(function(r){ setTimeout(r, 1000); });
     }
     try {
-      var res = await fetch(geminiUrl, {
+      var res = await fetch(tryUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: geminiPayload
@@ -1142,27 +1153,24 @@ ATA prescrit : ${ata}`;
         var data = await res.json();
         var txt = '';
         try { txt = data.candidates[0].content.parts[0].text; } catch(e2) {}
-        if (txt) { out.textContent = txt; copyBtn.className = 'btn-copy show'; ok = true; }
-        else { out.textContent = 'Réponse vide de Gemini. Réessaie.'; ok = true; }
+        if (txt) {
+          out.textContent = txt;
+          copyBtn.className = 'btn-copy show';
+          ok = true;
+          var sel = document.getElementById('f-model');
+          if (sel) sel.value = tryModel;
+        }
       } else {
         var errData = await res.json().catch(function(){return {};});
         var errMsg = (errData.error && errData.error.message) ? errData.error.message : 'HTTP ' + res.status;
-        if (res.status === 400) { out.textContent = 'Erreur Gemini : Requête invalide — vérifie ta clé API'; ok = true; }
-        else if (res.status === 403) { out.textContent = 'Erreur Gemini : Accès refusé — active l\'API sur aistudio.google.com'; ok = true; }
-        else if (res.status === 429 || res.status === 503 || errMsg.includes('high demand') || errMsg.includes('quota')) {
-          if (attempt === maxRetries) { out.textContent = 'Serveur Gemini surchargé. Attends 1 minute puis réessaie, ou change de modèle dans le sélecteur.'; ok = true; }
-          // else retry
-        } else {
+        if (res.status === 400 || res.status === 403) {
           out.textContent = 'Erreur Gemini : ' + errMsg;
           ok = true;
         }
       }
-    } catch(e1) {
-      if (attempt === maxRetries) ok = true; // exit loop
-    }
+    } catch(e1) { }
   }
-
-  if (!ok) {
+    if (!ok) {
     var lignes = [];
     lignes.push('Redigee a ' + lieu + ', San Andreas le ' + date + ' a ' + heure);
     lignes.push('Redacteur : ' + redacteur);
