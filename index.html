@@ -1101,7 +1101,7 @@ ATA prescrit : ${ata}`;
   });
 
   var ok = false;
-  var modelsToTry = ['gemini-2.0-flash'];
+  var modelsToTry = ['gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-1.5-flash-002'];
   modelsToTry = modelsToTry.filter(function(v,i,a){ return a.indexOf(v)===i; });
 
   for (var mi = 0; mi < modelsToTry.length && !ok; mi++) {
