@@ -1148,7 +1148,7 @@ ATA prescrit : ${ata}`;
         var errData = await res.json().catch(function(){return {};});
         var errMsg = (errData.error && errData.error.message) ? errData.error.message : 'HTTP ' + res.status;
         if (res.status === 400) { out.textContent = 'Erreur Gemini : Requête invalide — vérifie ta clé API'; ok = true; }
-        else if (res.status === 403) { out.textContent = 'Erreur Gemini : Accès refusé — active l'API sur aistudio.google.com'; ok = true; }
+        else if (res.status === 403) { out.textContent = 'Erreur Gemini : Accès refusé — active l\'API sur aistudio.google.com'; ok = true; }
         else if (res.status === 429 || res.status === 503 || errMsg.includes('high demand') || errMsg.includes('quota')) {
           if (attempt === maxRetries) { out.textContent = 'Serveur Gemini surchargé. Attends 1 minute puis réessaie, ou change de modèle dans le sélecteur.'; ok = true; }
           // else retry
