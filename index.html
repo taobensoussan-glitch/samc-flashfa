@@ -837,22 +837,12 @@
   <div class="page-title">Rédaction de rapports médicaux</div>
   <div class="page-sub">Assistant IA — Génère ton rapport SAMC officiel en quelques secondes — Code 3 &amp; Code 6</div>
 
-  <div class="card" style="margin-bottom:10px;border-left:4px solid var(--amber)">
-    <div style="font-size:12px;font-weight:700;color:var(--amber-dark);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Clé API Google Gemini requise</div>
-    <div style="font-size:12px;color:var(--txt2);margin-bottom:8px;line-height:1.6">Crée une clé gratuite sur <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--blue)">aistudio.google.com</a> et colle-la ici. Elle est stockée uniquement dans ton navigateur, jamais envoyée ailleurs.</div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <input id="f-apikey" type="password" class="form-input" placeholder="AIza..." style="flex:1;font-family:monospace;font-size:12px">
-      <button onclick="saveKey()" style="padding:9px 16px;background:var(--amber);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:var(--font)">Sauvegarder</button>
+  <div class="card" style="margin-bottom:10px;border-left:4px solid var(--green)">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:10px;height:10px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0"></div>
+      <div style="font-size:13px;font-weight:700;color:var(--green-dark)">IA SAMC opérationnelle — Gemini 1.5 Flash</div>
     </div>
-    <div id="key-status" style="font-size:12px;margin-top:6px;color:var(--txt3)"></div>
-    <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <label style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:0.05em">Modèle :</label>
-      <select id="f-model" style="font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--txt);font-family:var(--font)">
-        <option value="gemini-2.5-flash">Gemini 2.5 Flash — Recommandé, quota gratuit ✅</option>
-        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite — Léger & rapide ✅</option>
-        <option value="gemini-2.0-flash">Gemini 2.0 Flash — Alternative stable</option>
-      </select>
-    </div>
+    <div style="font-size:12px;color:var(--txt3);margin-top:4px">Prête à générer tes rapports. Remplis le formulaire et clique sur Générer.</div>
   </div>
 
   <div class="card" style="margin-bottom:1rem">
@@ -979,35 +969,13 @@ function saveKey() {
   if(document.getElementById('key-status')) { document.getElementById('key-status').style.color = 'var(--green)'; document.getElementById('key-status').textContent = 'Clé sauvegardée.'; }
 }
 
-function modalSave() {
-  var key = document.getElementById('modal-key-input').value.trim();
-  if (!key.startsWith('AIza')) {
-    document.getElementById('modal-err').textContent = 'Format invalide — la clé doit commencer par AIza';
-    return;
-  }
-  localStorage.setItem('samc_gemini_key', key);
-  if(document.getElementById('f-apikey')) document.getElementById('f-apikey').value = key;
-  if(document.getElementById('key-status')) { document.getElementById('key-status').style.color = 'var(--green)'; document.getElementById('key-status').textContent = 'Clé active.'; }
-  document.getElementById('modal-overlay').style.display = 'none';
-}
-
-function modalSkip() {
-  localStorage.setItem('samc_modal_skipped', '1');
-  document.getElementById('modal-overlay').style.display = 'none';
-}
-
-function loadKey() {
-  var saved = localStorage.getItem('samc_gemini_key');
-  if (saved) {
-    if(document.getElementById('f-apikey')) document.getElementById('f-apikey').value = saved;
-    if(document.getElementById('key-status')) { document.getElementById('key-status').style.color = 'var(--green)'; document.getElementById('key-status').textContent = 'Clé active — IA prête.'; }
-  } else {
-    var skipped = localStorage.getItem('samc_modal_skipped');
-    if (!skipped) document.getElementById('modal-overlay').style.display = 'flex';
-  }
-}
-
-window.addEventListener('DOMContentLoaded', loadKey);
+function modalSave() {}
+function modalSkip() { document.getElementById('modal-overlay').style.display = 'none'; }
+function loadKey() {}
+window.addEventListener('DOMContentLoaded', function() {
+  var overlay = document.getElementById('modal-overlay');
+  if (overlay) overlay.style.display = 'none';
+});
 
 function go(tab, el) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -1146,15 +1114,9 @@ Facturation : ${factures}
 
 ATA prescrit : ${ata}`;
 
-  var apiKey = localStorage.getItem('samc_gemini_key') || document.getElementById('f-apikey').value.trim();
-  if (!apiKey || !apiKey.startsWith('AIza')) {
-    out.textContent = 'Clé API Gemini manquante. Colle ta clé AIza... dans le champ en haut, puis clique Sauvegarder.';
-    btn.disabled = false;
-    btn.textContent = 'Générer le rapport médical SAMC';
-    return;
-  }
+  var apiKey = 'AIzaSyBDjUnxttjaFd6JPuOzRz9Se0IxWHqLs1A';
 
-  var selectedModel = document.getElementById('f-model') ? document.getElementById('f-model').value : 'gemini-1.5-flash';
+  var selectedModel = 'gemini-1.5-flash';
   var geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/' + selectedModel + ':generateContent?key=' + apiKey;
   var geminiPayload = JSON.stringify({
     system_instruction: { parts: [{ text: systemPrompt }] },
@@ -1163,29 +1125,41 @@ ATA prescrit : ${ata}`;
   });
 
   var ok = false;
+  var maxRetries = 3;
 
-  try {
-    var res = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: geminiPayload
-    });
-    if (res.ok) {
-      var data = await res.json();
-      var txt = '';
-      try { txt = data.candidates[0].content.parts[0].text; } catch(e2) {}
-      if (txt) { out.textContent = txt; copyBtn.className = 'btn-copy show'; ok = true; }
-      else { out.textContent = 'Erreur : reponse vide de Gemini. Reessaie.'; ok = true; }
-    } else {
-      var errData = await res.json().catch(function(){return {};});
-      var errMsg = (errData.error && errData.error.message) ? errData.error.message : 'HTTP ' + res.status;
-      if (res.status === 400) errMsg = 'Requete invalide — verifie ta cle API Gemini';
-      if (res.status === 403) errMsg = 'Acces refuse — active l API Gemini sur aistudio.google.com';
-      out.textContent = 'Erreur Gemini : ' + errMsg;
-      ok = true;
+  for (var attempt = 1; attempt <= maxRetries && !ok; attempt++) {
+    if (attempt > 1) {
+      out.textContent = 'Serveur surchargé — nouvelle tentative ' + attempt + '/' + maxRetries + '…';
+      await new Promise(function(r){ setTimeout(r, 3000 * attempt); });
     }
-  } catch(e1) {
-    // reseau coupe ou CORS
+    try {
+      var res = await fetch(geminiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: geminiPayload
+      });
+      if (res.ok) {
+        var data = await res.json();
+        var txt = '';
+        try { txt = data.candidates[0].content.parts[0].text; } catch(e2) {}
+        if (txt) { out.textContent = txt; copyBtn.className = 'btn-copy show'; ok = true; }
+        else { out.textContent = 'Réponse vide de Gemini. Réessaie.'; ok = true; }
+      } else {
+        var errData = await res.json().catch(function(){return {};});
+        var errMsg = (errData.error && errData.error.message) ? errData.error.message : 'HTTP ' + res.status;
+        if (res.status === 400) { out.textContent = 'Erreur Gemini : Requête invalide — vérifie ta clé API'; ok = true; }
+        else if (res.status === 403) { out.textContent = 'Erreur Gemini : Accès refusé — active l'API sur aistudio.google.com'; ok = true; }
+        else if (res.status === 429 || res.status === 503 || errMsg.includes('high demand') || errMsg.includes('quota')) {
+          if (attempt === maxRetries) { out.textContent = 'Serveur Gemini surchargé. Attends 1 minute puis réessaie, ou change de modèle dans le sélecteur.'; ok = true; }
+          // else retry
+        } else {
+          out.textContent = 'Erreur Gemini : ' + errMsg;
+          ok = true;
+        }
+      }
+    } catch(e1) {
+      if (attempt === maxRetries) ok = true; // exit loop
+    }
   }
 
   if (!ok) {
