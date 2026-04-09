@@ -1060,8 +1060,13 @@ async function genRapport() {
   btn.disabled = true;
   btn.textContent = 'Génération en cours…';
   out.className = 'output-area show';
-  out.textContent = 'Rédaction du rapport…';
+  out.textContent = 'Rédaction en cours';
   copyBtn.className = 'btn-copy';
+  var dots = 0;
+  var loadAnim = setInterval(function(){
+    dots = (dots + 1) % 4;
+    out.textContent = 'Rédaction en cours' + '.'.repeat(dots);
+  }, 400);
 
   var systemPrompt = `Rédacteur officiel SAMC — GTA RP FlashFA. Rapport médical en français, style formel. Structure : en-tête (lieu/date/heure/rédacteur), attestation SAMC, admission, constantes vitales réalistes selon blessures, diagnostic, volet chirurgical si besoin, conclusion, actes facturés, signature, ATA. Sois concis et direct.`;
 
@@ -1116,21 +1121,31 @@ ATA prescrit : ${ata}`;
         var txt = '';
         try { txt = data.candidates[0].content.parts[0].text; } catch(e2) {}
         if (txt) {
+          clearInterval(loadAnim);
           out.textContent = txt;
           copyBtn.className = 'btn-copy show';
           ok = true;
-          var sel = document.getElementById('f-model');
-          if (sel) sel.value = tryModel;
+        } else {
+          clearInterval(loadAnim);
+          out.textContent = 'Réponse vide — réessaie.';
+          ok = true;
         }
       } else {
         var errData = await res.json().catch(function(){return {};});
         var errMsg = (errData.error && errData.error.message) ? errData.error.message : 'HTTP ' + res.status;
-        if (res.status === 400 || res.status === 403) {
-          out.textContent = 'Erreur Gemini : ' + errMsg;
-          ok = true;
-        }
+        clearInterval(loadAnim);
+        out.textContent = 'Erreur Gemini : ' + errMsg;
+        ok = true;
       }
-    } catch(e1) { }
+    } catch(e1) {
+      clearInterval(loadAnim);
+      if (e1.name === 'AbortError') {
+        out.textContent = 'Timeout — le serveur Gemini met trop de temps. Réessaie dans quelques secondes.';
+      } else {
+        out.textContent = 'Erreur réseau : ' + e1.message;
+      }
+      ok = true;
+    }
   }
     if (!ok) {
     var lignes = [];
@@ -1183,7 +1198,7 @@ ATA prescrit : ${ata}`;
   }
 
   btn.disabled = false;
-  btn.textContent = 'Generer le rapport medical SAMC';
+  btn.textContent = 'Générer le rapport médical SAMC';
 }
 
 function copyOutput() {
