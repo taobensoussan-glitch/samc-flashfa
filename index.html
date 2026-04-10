@@ -284,6 +284,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--txt);min-height:10
 .status-bar{background:var(--navy2);padding:6px 1.25rem;display:flex;align-items:center;gap:10px;font-size:12px;color:rgba(255,255,255,.45)}
 .nav-separator{width:1px;background:rgba(255,255,255,.15);margin:8px 6px;align-self:stretch;flex-shrink:0}
   .nav-category{font-size:9px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.12em;padding:0 10px;white-space:nowrap;align-self:center;flex-shrink:0}
+  .nav-dropdown{position:relative}
+  .nav-dropdown-trigger{display:flex;align-items:center;gap:4px}
+  .nav-dropdown-menu{display:none;position:absolute;top:calc(100% + 3px);left:0;background:var(--navy2);border:1px solid rgba(255,255,255,.1);border-radius:10px;min-width:200px;padding:6px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  .nav-dropdown.open .nav-dropdown-menu{display:block}
+  @media(min-width:960px){
+    .nav-dropdown:hover .nav-dropdown-menu{display:block}
+  }
+  .nav-dropdown-label{font-size:10px;font-weight:800;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.1em;padding:6px 10px 4px}
+  .nav-dropdown-item{display:block;width:100%;background:none;border:none;padding:9px 12px;font-size:13px;color:rgba(255,255,255,.8);cursor:pointer;text-align:left;font-family:var(--font);border-radius:7px;transition:background .1s,color .1s}
+  .nav-dropdown-item:hover{background:rgba(255,255,255,.1);color:#fff}
   .status-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite;flex-shrink:0}
 .status-sep{color:rgba(255,255,255,.2)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
@@ -316,23 +326,30 @@ body{font-family:var(--font);background:var(--bg);color:var(--txt);min-height:10
       </div>
     </a>
     <div class="nav-tabs" id="nav-tabs-desktop">
-      <button class="nav-tab active" onclick="go('accueil',this)">🏠 Accueil</button>
-      <div class="nav-separator"></div>
-      <div class="nav-category">INTERVENTION</div>
-      <button class="nav-tab" onclick="go('rapports',this)">📝 Rapports IA</button>
-      <button class="nav-tab" onclick="go('patient',this)">🩺 Fiche patient</button>
-      <button class="nav-tab" onclick="go('facturation',this)">💰 Facturation</button>
-      <button class="nav-tab" onclick="go('checklist',this)">✅ Checklist</button>
-      <div class="nav-separator"></div>
-      <div class="nav-category">RÉFÉRENCE</div>
-      <button class="nav-tab" onclick="go('protocoles',this)">🚑 Protocoles</button>
-      <button class="nav-tab" onclick="go('blessures',this)">🩹 Blessures</button>
-      <button class="nav-tab" onclick="go('chirurgie',this)">🏥 Chirurgie</button>
-      <button class="nav-tab" onclick="go('radio',this)">📻 Radio</button>
-      <button class="nav-tab" onclick="go('vehicules',this)">🚗 Véhicules</button>
-      <button class="nav-tab" onclick="go('grades',this)">⭐ Grades</button>
-      <button class="nav-tab" onclick="go('pharma',this)">💊 Pharma</button>
-      <div class="nav-separator"></div>
+      <button class="nav-tab active" onclick="go('accueil',this)">Accueil</button>
+      <div class="nav-dropdown">
+        <button class="nav-tab nav-dropdown-trigger" onclick="toggleDropdown(event,this)">🔴 Intervention ▾</button>
+        <div class="nav-dropdown-menu">
+          <div class="nav-dropdown-label">Intervention</div>
+          <button class="nav-dropdown-item" onclick="go('rapports',null);closeDropdowns()">📝 Rapports IA</button>
+          <button class="nav-dropdown-item" onclick="go('patient',null);closeDropdowns()">🩺 Fiche patient</button>
+          <button class="nav-dropdown-item" onclick="go('facturation',null);closeDropdowns()">💰 Facturation</button>
+          <button class="nav-dropdown-item" onclick="go('checklist',null);closeDropdowns()">✅ Checklist</button>
+        </div>
+      </div>
+      <div class="nav-dropdown">
+        <button class="nav-tab nav-dropdown-trigger" onclick="toggleDropdown(event,this)">🔵 Référence ▾</button>
+        <div class="nav-dropdown-menu">
+          <div class="nav-dropdown-label">Référence médicale</div>
+          <button class="nav-dropdown-item" onclick="go('protocoles',null);closeDropdowns()">🚑 Protocoles terrain</button>
+          <button class="nav-dropdown-item" onclick="go('blessures',null);closeDropdowns()">🩹 Blessures &amp; ATA</button>
+          <button class="nav-dropdown-item" onclick="go('chirurgie',null);closeDropdowns()">🏥 Chirurgie &amp; Bloc</button>
+          <button class="nav-dropdown-item" onclick="go('radio',null);closeDropdowns()">📻 Codes radio</button>
+          <button class="nav-dropdown-item" onclick="go('vehicules',null);closeDropdowns()">🚗 Véhicules</button>
+          <button class="nav-dropdown-item" onclick="go('grades',null);closeDropdowns()">⭐ Grades &amp; Dispatch</button>
+          <button class="nav-dropdown-item" onclick="go('pharma',null);closeDropdowns()">💊 Pharmacologie</button>
+        </div>
+      </div>
       <button class="nav-tab" onclick="go('profil',this)">👤 Profil</button>
       <button class="nav-tab" onclick="go('recherche',this)">🔍</button>
     </div>
@@ -1200,11 +1217,12 @@ var SEARCH_DATA = [
 // ─── CORE NAV ───
 function go(tab, el) {
   document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
-  document.querySelectorAll('.nav-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.nav-tab, .nav-dropdown-item').forEach(function(t){ t.classList.remove('active'); });
   var sec = document.getElementById('tab-' + tab);
   if (sec) sec.classList.add('active');
   if (el) el.classList.add('active');
   window.scrollTo(0,0);
+  closeDropdowns();
 }
 
 function toggle(head) {
@@ -1213,6 +1231,22 @@ function toggle(head) {
   if (body) body.classList.toggle('open');
   if (ch) ch.classList.toggle('open');
 }
+
+function closeDropdowns() {
+  document.querySelectorAll('.nav-dropdown').forEach(function(d){ d.classList.remove('open'); });
+}
+
+function toggleDropdown(e, el) {
+  e.stopPropagation();
+  var dd = el.parentElement;
+  var wasOpen = dd.classList.contains('open');
+  closeDropdowns();
+  if (!wasOpen) dd.classList.add('open');
+}
+
+document.addEventListener('click', function() {
+  closeDropdowns();
+});
 
 function toggleBurger() {
   document.getElementById('burger-menu').classList.toggle('open');
